@@ -2,87 +2,463 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <title>Chatbot Minat Bakat Siswa</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EduTalent AI 76 - Temukan Minat & Bakatmu</title>
+  
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Rahasia 1: Markdown Parser untuk hasil format yang rapi dari PenaAI -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              500: '#3b82f6',
+              600: '#2563eb',
+              700: '#1d4ed8',
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
   <style>
-    body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
-    #chat { height: 350px; overflow-y: auto; border: 1px solid #eee; padding: 10px; margin-bottom: 10px; background: #f9f9f9; border-radius: 5px; }
-    .user { color: #1e40af; margin: 8px 0; text-align: right; }
-    .bot { color: #065f46; margin: 8px 0; text-align: left; }
-    input[type="text"], input[type="password"] { padding: 10px; width: 70%; border: 1px solid #ccc; border-radius: 5px; }
-    button { padding: 10px 15px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer; }
+    body {
+      background-color: #f0fdf4; /* Warna latar belakang soft green/blue */
+      background-image: radial-gradient(#dbeafe 1px, transparent 1px);
+      background-size: 20px 20px;
+    }
+    
+    /* Custom Scrollbar untuk area chat */
+    #chat-container::-webkit-scrollbar {
+      width: 6px;
+    }
+    #chat-container::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    #chat-container::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 20px;
+    }
+    
+    /* Animasi ketik */
+    .typing-indicator span {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background-color: #94a3b8;
+      border-radius: 50%;
+      margin: 0 2px;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+    
+    /* Rahasia 2: CSS untuk Markdown (Disesuaikan dari PenaAI) */
+    .markdown-body { font-size: 0.875rem; color: #374151; }
+    .markdown-body p { margin-bottom: 0.75rem; line-height: 1.6; }
+    .markdown-body h1, .markdown-body h2, .markdown-body h3 { font-weight: 600; color: #111827; margin-top: 1rem; margin-bottom: 0.5rem; }
+    .markdown-body ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    .markdown-body ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.75rem; }
+    .markdown-body li { margin-bottom: 0.25rem; }
+    .markdown-body strong { font-weight: 600; color: #111827; }
+    .markdown-body *:last-child { margin-bottom: 0; }
   </style>
 </head>
-<body>
+<body class="h-screen flex items-center justify-center font-sans antialiased text-gray-800 p-0 sm:p-4">
 
-  <h2>🎓 Chatbot Minat & Bakat Siswa</h2>
-  
-  <!-- Langkah Awal: Input API Key -->
-  <div id="apiArea">
-    <p><b>Masukkan API Key Gemini Anda:</b></p>
-    <input type="password" id="apiKey" placeholder="Tempel API Key di sini...">
-    <button onclick="startChat()">Mulai Chat</button>
-    <p><small>Belum punya API Key? <a href="https://aistudio.google.com/app/apikey" target="_blank">Ambil Gratis di Sini</a></small></p>
-  </div>
+  <main class="w-full max-w-2xl h-full sm:h-[90vh] bg-white sm:rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
+    
+    <!-- HEADER -->
+    <header class="bg-gradient-to-r from-brand-700 to-brand-500 p-4 flex items-center justify-between shadow-md z-10 text-white">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-white p-1 flex items-center justify-center overflow-hidden shadow-inner">
+          <img src="https://res.cloudinary.com/dbniitdej/image/upload/v1785508805/Gemini_Generated_Image_s7gc0fs7gc0fs7gc_hawuqp.png" alt="EduTalent Logo" class="w-full h-full object-cover rounded-full">
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">EduTalent AI 76</h1>
+          <p class="text-brand-100 text-[11px] sm:text-xs leading-tight mt-0.5 opacity-90">
+            Chat bot untuk minat dan bakat.<br>Dikembangkan oleh Ilmi, S.Pd., M.Pd
+          </p>
+        </div>
+      </div>
+      <button onclick="openSettings()" class="w-10 h-10 rounded-full hover:bg-white/20 transition-colors flex items-center justify-center" title="Pengaturan API Key">
+        <i class="fa-solid fa-gear"></i>
+      </button>
+    </header>
 
-  <!-- Layar Chat -->
-  <div id="chatArea" style="display:none;">
-    <div id="chat"></div>
-    <input type="text" id="userInput" placeholder="Tulis jawabanmu di sini...">
-    <button onclick="kirimPesan()">Kirim</button>
-  </div>
+    <!-- AREA CHAT -->
+    <div id="chat-container" class="flex-1 overflow-y-auto p-4 flex flex-col gap-4 bg-slate-50/50">
+      <!-- Pesan akan dimuat di sini oleh JavaScript -->
+    </div>
 
-  <script type="module">
-    import { GoogleGenAI } from "https://esm.sh/@google/genai";
+    <!-- AREA INPUT -->
+    <div class="p-4 bg-white border-t border-gray-100">
+      <form id="chat-form" class="flex gap-2 items-end relative" onsubmit="handleSend(event)">
+        <div class="flex-1 bg-gray-100 rounded-2xl flex items-center px-4 py-1 shadow-inner border border-gray-200 transition-colors focus-within:border-brand-300 focus-within:bg-white">
+          <textarea 
+            id="user-input" 
+            rows="1" 
+            class="w-full bg-transparent resize-none py-3 outline-none text-sm max-h-32" 
+            placeholder="Ketik balasanmu di sini..."
+            oninput="autoResize(this)"
+            onkeydown="handleEnter(event)"></textarea>
+        </div>
+        <button type="submit" id="send-btn" class="w-12 h-12 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-lg hover:bg-brand-700 hover:scale-105 transition-all flex-shrink-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100">
+          <i class="fa-solid fa-paper-plane"></i>
+        </button>
+      </form>
+    </div>
 
-    let aiClient = null;
-    let history = [];
+    <div id="api-modal" class="absolute inset-0 bg-gray-900/60 backdrop-blur-sm z-50 flex items-center justify-center transition-opacity opacity-0 pointer-events-none">
+      <div class="bg-white rounded-2xl w-[90%] max-w-md shadow-2xl transform scale-95 transition-transform p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-bold text-gray-800 flex items-center gap-2">
+            <i class="fa-solid fa-key text-brand-500"></i> Pengaturan Sistem
+          </h2>
+          <button onclick="closeSettings()" id="close-modal-btn" class="text-gray-400 hover:text-gray-600 hidden">
+            <i class="fa-solid fa-xmark text-xl"></i>
+          </button>
+        </div>
+        
+        <p class="text-sm text-gray-600 mb-4">
+          Untuk menggunakan <b>EduTalent AI 76</b>, Anda memerlukan API Key Gemini. Kunci ini akan disimpan dengan aman di perangkat Anda (Local Storage) dan dikirim langsung ke Google.
+        </p>
 
-    window.startChat = () => {
-      const key = document.getElementById('apiKey').value.trim();
-      if(!key) return alert("API Key tidak boleh kosong!");
-      
-      aiClient = new GoogleGenAI({ apiKey: key });
-      document.getElementById('apiArea').style.display = 'none';
-      document.getElementById('chatArea').style.display = 'block';
-      
-      tambahPesan("Bot", "Halo! Aku siap bantu kamu mengenali minat dan bakatmu. Pelajaran atau hobi apa yang paling kamu sukai saat ini?");
+        <div class="mb-5">
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">API Key Gemini Anda</label>
+          <div class="relative">
+            <input type="password" id="api-key-input" class="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition-colors" placeholder="AIzaSy...">
+            <i class="fa-solid fa-lock absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+          </div>
+          <p class="text-xs text-gray-500 mt-2">
+            Belum punya? <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-brand-600 hover:underline font-medium">Dapatkan secara gratis di Google AI Studio</a>.
+          </p>
+          <p id="api-error-msg" class="text-xs text-red-500 mt-2 hidden font-medium"><i class="fa-solid fa-circle-exclamation"></i> API Key tidak boleh kosong!</p>
+        </div>
+
+        <button onclick="saveApiKey()" class="w-full py-3 bg-brand-600 text-white rounded-xl font-medium shadow-md hover:bg-brand-700 transition-colors flex items-center justify-center gap-2">
+          <i class="fa-solid fa-check"></i> Simpan & Mulai Chat
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // State Aplikasi
+    const state = {
+      apiKey: '',
+      chatHistory: [],
+      isWaiting: false,
+      botAvatar: 'https://res.cloudinary.com/dbniitdej/image/upload/v1783339927/DSC_0741_copy_huj0kr.jpg'
     };
 
-    window.kirimPesan = async () => {
-      const input = document.getElementById('userInput');
-      const pesanUser = input.value.trim();
-      if(!pesanUser) return;
+    const systemInstruction = `Kamu adalah Bpk. Ilmi, S.Pd., M.Pd, seorang Guru Bimbingan Konseling (BK) yang ramah, hangat, dan suportif. Tugas utamamu adalah membantu siswa menemukan minat, bakat, dan potensi diri mereka lewat tanya jawab yang santai dan tidak menggurui. 
+PENTING: Selalu berikan HANYA 1 pertanyaan spesifik di setiap akhir balasanmu agar diskusi tetap interaktif dan fokus. Gunakan bahasa Indonesia yang baik, santai, namun tetap sopan (seperti interaksi guru BK muda ke siswa).`;
 
-      tambahPesan("Kamu", pesanUser);
-      input.value = '';
+    // Elemen DOM
+    const chatContainer = document.getElementById('chat-container');
+    const userInput = document.getElementById('user-input');
+    const sendBtn = document.getElementById('send-btn');
+    const apiModal = document.getElementById('api-modal');
+    const apiKeyInput = document.getElementById('api-key-input');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+    const modalContent = apiModal.querySelector('div');
 
-      history.push({ role: 'user', parts: [{ text: pesanUser }] });
-
-      try {
-        const response = await aiClient.models.generateContent({
-          model: 'gemini-2.5-flash',
-          contents: history,
-          config: {
-            systemInstruction: "Kamu adalah Guru BK yang ramah. Tugasmu membantu siswa menemukan minat dan bakat lewat tanya jawab santai. Berikan 1 pertanyaan saja di setiap balasan agar interaktif."
-          }
-        });
-
-        const balasanBot = response.text;
-        history.push({ role: 'model', parts: [{ text: balasanBot }] });
-        tambahPesan("Bot", balasanBot);
-      } catch (e) {
-        tambahPesan("Bot", "Error: " + e.message + " (Cek kembali API Key Anda)");
+    // Inisialisasi saat halaman dimuat
+    window.onload = () => {
+      // Cek LocalStorage
+      const savedKey = localStorage.getItem('edutalent_api_key');
+      if (savedKey) {
+        state.apiKey = savedKey;
+        apiKeyInput.value = savedKey;
+        
+        // Sapaan pertama jika history kosong
+        if (state.chatHistory.length === 0) {
+          addBotWelcomeMessage();
+        }
+      } else {
+        openSettings(true);
       }
     };
 
-    function tambahPesan(pengirim, teks) {
-      const chat = document.getElementById('chat');
-      const p = document.createElement('p');
-      p.className = pengirim === 'Kamu' ? 'user' : 'bot';
-      p.innerHTML = `<b>${pengirim}:</b> ${teks}`;
-      chat.appendChild(p);
-      chat.scrollTop = chat.scrollHeight;
+    // Fungsi Auto Resize Textarea
+    function autoResize(el) {
+      el.style.height = 'auto';
+      el.style.height = (el.scrollHeight) + 'px';
+      if(el.value === '') el.style.height = 'auto'; // reset
     }
+
+    // Tangani Enter untuk submit, Shift+Enter untuk baris baru
+    function handleEnter(e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if(!state.isWaiting) handleSend(e);
+      }
+    }
+
+    function openSettings(isInitial = false) {
+      apiModal.classList.remove('opacity-0', 'pointer-events-none');
+      modalContent.classList.remove('scale-95');
+      modalContent.classList.add('scale-100');
+      
+      if (isInitial || !state.apiKey) {
+        closeModalBtn.classList.add('hidden'); // Wajib isi
+      } else {
+        closeModalBtn.classList.remove('hidden'); // Bisa dicancel
+      }
+    }
+
+    function closeSettings() {
+      apiModal.classList.add('opacity-0', 'pointer-events-none');
+      modalContent.classList.remove('scale-100');
+      modalContent.classList.add('scale-95');
+    }
+
+    function saveApiKey() {
+      const key = apiKeyInput.value.trim();
+      const errorMsg = document.getElementById('api-error-msg');
+      
+      if (!key) {
+        errorMsg.classList.remove('hidden');
+        return;
+      }
+      
+      errorMsg.classList.add('hidden');
+      state.apiKey = key;
+      localStorage.setItem('edutalent_api_key', key);
+      closeSettings();
+
+      if (state.chatHistory.length === 0) {
+        addBotWelcomeMessage();
+      }
+    }
+
+    function addBotWelcomeMessage() {
+      const welcomeText = "Halo! Bapak Ilmi di sini. Senang bisa ngobrol sama kamu. Bapak siap bantu kamu buat menggali minat dan potensi hebat yang ada di diri kamu. Nah, belakangan ini, pelajaran atau hobi apa sih yang paling bikin kamu bersemangat?";
+      
+      renderMessage('model', welcomeText);
+      
+      // FIX 1: API Gemini mewajibkan history diawali oleh 'user' dan berselang-seling.
+      // Kita tambahkan pesan inisiator 'user' tersembunyi agar struktur valid.
+      state.chatHistory = [
+        { role: 'user', parts: [{ text: 'Halo Pak Ilmi, mari kita mulai sesi konseling ini.' }] },
+        { role: 'model', parts: [{ text: welcomeText }] }
+      ];
+    }
+
+    function renderMessage(role, text) {
+      const isModel = role === 'model';
+      
+      const wrapper = document.createElement('div');
+      wrapper.className = `flex w-full ${isModel ? 'justify-start' : 'justify-end'} animate-[fadeIn_0.3s_ease-out] mb-2`;
+      
+      // Rahasia 3: Gunakan marked.parse untuk format output AI (list, bold, dll)
+      const formattedText = isModel ? marked.parse(text) : text.replace(/\n/g, '<br>');
+      
+      let innerHTML = '';
+      
+      if (isModel) {
+        innerHTML = `
+          <div class="flex max-w-[85%] gap-2 items-end">
+            <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 shadow-sm border border-gray-200">
+              <img src="${state.botAvatar}" alt="Bpk Ilmi" class="w-full h-full object-cover">
+            </div>
+            <div class="bg-white px-4 py-3 rounded-2xl rounded-bl-none shadow-sm border border-gray-100 text-sm text-gray-800 markdown-body">
+              ${formattedText}
+            </div>
+          </div>
+        `;
+      } else {
+        innerHTML = `
+          <div class="flex max-w-[85%] gap-2 items-end">
+            <div class="bg-brand-600 px-4 py-3 rounded-2xl rounded-br-none shadow-sm text-sm text-white">
+              ${formattedText}
+            </div>
+          </div>
+        `;
+      }
+      
+      wrapper.innerHTML = innerHTML;
+      chatContainer.appendChild(wrapper);
+      scrollToBottom();
+    }
+
+    function showTyping() {
+      const wrapper = document.createElement('div');
+      wrapper.id = 'typing-indicator';
+      wrapper.className = `flex w-full justify-start animate-[fadeIn_0.3s_ease-out] mb-2`;
+      wrapper.innerHTML = `
+        <div class="flex gap-2 items-end">
+          <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 shadow-sm border border-gray-200">
+            <img src="${state.botAvatar}" alt="Bpk Ilmi" class="w-full h-full object-cover opacity-70">
+          </div>
+          <div class="bg-white px-4 py-4 rounded-2xl rounded-bl-none shadow-sm border border-gray-100 typing-indicator flex items-center justify-center">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      `;
+      chatContainer.appendChild(wrapper);
+      scrollToBottom();
+    }
+
+    function removeTyping() {
+      const indicator = document.getElementById('typing-indicator');
+      if (indicator) indicator.remove();
+    }
+
+    function scrollToBottom() {
+      setTimeout(() => {
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }, 50);
+    }
+
+    async function handleSend(e) {
+      if (e) e.preventDefault();
+      
+      const text = userInput.value.trim();
+      if (!text || state.isWaiting) return;
+
+      // GUARD CLAUSE: Pencegahan Error Otomatis 401
+      if (!state.apiKey) {
+        openSettings(true);
+        return;
+      }
+
+      // Update UI untuk pesan user
+      renderMessage('user', text);
+      userInput.value = '';
+      userInput.style.height = 'auto';
+      state.isWaiting = true;
+      sendBtn.disabled = true;
+      
+      // Simpan ke history
+      state.chatHistory.push({ role: 'user', parts: [{ text: text }] });
+      
+      showTyping();
+
+      try {
+        await callGeminiAPI();
+      } catch (error) {
+        removeTyping();
+        renderMessage('model', `*Maaf, terjadi kesalahan teknis: ${error.message}. Mohon cek koneksi atau API Key Anda di pengaturan.*`);
+        // Hapus pesan user terakhir dari history karena gagal diproses
+        state.chatHistory.pop();
+      } finally {
+        state.isWaiting = false;
+        sendBtn.disabled = false;
+        userInput.focus();
+      }
+    }
+
+    async function callGeminiAPI() {
+      // Rahasia 4: Urutan model dari PenaAI (menggunakan model terbaru)
+      const modelsToTry = [
+        'gemini-3-flash-preview',
+        'gemini-1.5-flash',
+        'gemini-1.5-pro'
+      ];
+      
+      let lastError = null;
+
+      const requestBody = {
+        systemInstruction: {
+          parts: [{ text: systemInstruction }]
+        },
+        contents: state.chatHistory,
+        // Rahasia 5: Generation Config untuk stabilitas jawaban
+        generationConfig: {
+          temperature: 0.7,
+          topP: 0.9,
+          topK: 40
+        }
+      };
+
+      for (const model of modelsToTry) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${state.apiKey}`;
+        
+        try {
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(requestBody)
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            if (data.candidates && data.candidates.length > 0) {
+              const botReply = data.candidates[0].content.parts[0].text;
+              
+              removeTyping();
+              renderMessage('model', botReply);
+              
+              // Simpan balasan bot ke history
+              state.chatHistory.push({ role: 'model', parts: [{ text: botReply }] });
+              return; // Berhasil, langsung keluar dari fungsi fallback
+            } else {
+              throw new Error("Format respons API tidak sesuai");
+            }
+          } else {
+            // FIX 3: Ambil detail pesan error asli dari server Google jika ada
+            let errorMessage = `HTTP Error: ${response.status}`;
+            try {
+              const errData = await response.json();
+              if (errData.error && errData.error.message) {
+                errorMessage += ` - ${errData.error.message}`;
+              }
+            } catch (e) { /* Abaikan jika bukan format JSON */ }
+
+            if (response.status === 401) {
+              state.apiKey = '';
+              localStorage.removeItem('edutalent_api_key');
+              openSettings(true);
+              throw new Error("API Key tidak valid (401). Silakan cek kembali kunci Anda.");
+            } else if (response.status === 404) {
+              // Jika 404, simpan error di log dan lanjut ke iterasi model berikutnya
+              console.warn(`Model ${model} tidak ditemukan (404). Mencoba model lain...`);
+              lastError = new Error(errorMessage);
+              continue;
+            } else {
+              // Untuk error lain (misal 400 Bad Request), langsung lemparkan
+              throw new Error(errorMessage);
+            }
+          }
+        } catch (error) {
+          if (error.message.includes('401') || error.message.includes('400')) {
+             throw error; // Lempar langsung jika error kritis
+          }
+          lastError = error;
+        }
+      }
+      
+      // Jika semua percobaan model di atas gagal
+      throw lastError || new Error("Semua percobaan model API gagal. Cek kembali koneksi Anda.");
+    }
+
+    // Menambahkan animasi fade in global
+    const style = document.createElement('style');
+    style.innerHTML = `
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    `;
+    document.head.appendChild(style);
   </script>
 </body>
 </html>
