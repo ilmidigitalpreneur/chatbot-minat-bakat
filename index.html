@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Chatbot Minat Bakat Siswa</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; padding: 20px; border: 1px solid #ccc; border-radius: 10px; }
+    #chat { height: 350px; overflow-y: auto; border: 1px solid #eee; padding: 10px; margin-bottom: 10px; background: #f9f9f9; border-radius: 5px; }
+    .user { color: #1e40af; margin: 8px 0; text-align: right; }
+    .bot { color: #065f46; margin: 8px 0; text-align: left; }
+    input[type="text"], input[type="password"] { padding: 10px; width: 70%; border: 1px solid #ccc; border-radius: 5px; }
+    button { padding: 10px 15px; background: #2563eb; color: white; border: none; border-radius: 5px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <h2>🎓 Chatbot Minat & Bakat Siswa</h2>
+  
+  <!-- Langkah Awal: Input API Key -->
+  <div id="apiArea">
+    <p><b>Masukkan API Key Gemini Anda:</b></p>
+    <input type="password" id="apiKey" placeholder="Tempel API Key di sini...">
+    <button onclick="startChat()">Mulai Chat</button>
+    <p><small>Belum punya API Key? <a href="https://aistudio.google.com/app/apikey" target="_blank">Ambil Gratis di Sini</a></small></p>
+  </div>
+
+  <!-- Layar Chat -->
+  <div id="chatArea" style="display:none;">
+    <div id="chat"></div>
+    <input type="text" id="userInput" placeholder="Tulis jawabanmu di sini...">
+    <button onclick="kirimPesan()">Kirim</button>
+  </div>
+
+  <script type="module">
+    import { GoogleGenAI } from "https://esm.sh/@google/genai";
+
+    let aiClient = null;
+    let history = [];
+
+    window.startChat = () => {
+      const key = document.getElementById('apiKey').value.trim();
+      if(!key) return alert("API Key tidak boleh kosong!");
+      
+      aiClient = new GoogleGenAI({ apiKey: key });
+      document.getElementById('apiArea').style.display = 'none';
+      document.getElementById('chatArea').style.display = 'block';
+      
+      tambahPesan("Bot", "Halo! Aku siap bantu kamu mengenali minat dan bakatmu. Pelajaran atau hobi apa yang paling kamu sukai saat ini?");
+    };
+
+    window.kirimPesan = async () => {
+      const input = document.getElementById('userInput');
+      const pesanUser = input.value.trim();
+      if(!pesanUser) return;
+
+      tambahPesan("Kamu", pesanUser);
+      input.value = '';
+
+      history.push({ role: 'user', parts: [{ text: pesanUser }] });
+
+      try {
+        const response = await aiClient.models.generateContent({
+          model: 'gemini-2.5-flash',
+          contents: history,
+          config: {
+            systemInstruction: "Kamu adalah Guru BK yang ramah. Tugasmu membantu siswa menemukan minat dan bakat lewat tanya jawab santai. Berikan 1 pertanyaan saja di setiap balasan agar interaktif."
+          }
+        });
+
+        const balasanBot = response.text;
+        history.push({ role: 'model', parts: [{ text: balasanBot }] });
+        tambahPesan("Bot", balasanBot);
+      } catch (e) {
+        tambahPesan("Bot", "Error: " + e.message + " (Cek kembali API Key Anda)");
+      }
+    };
+
+    function tambahPesan(pengirim, teks) {
+      const chat = document.getElementById('chat');
+      const p = document.createElement('p');
+      p.className = pengirim === 'Kamu' ? 'user' : 'bot';
+      p.innerHTML = `<b>${pengirim}:</b> ${teks}`;
+      chat.appendChild(p);
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+</body>
+</html>
